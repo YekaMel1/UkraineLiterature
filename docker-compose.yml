@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:14-alpine
+    container_name: literature-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: literature
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build: .
+    container_name: literature-app
+    ports:
+      - "5000:5000"
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=postgres://postgres:postgres@db:5432/literature
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=literature
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - SESSION_SECRET=literaturesecret
+      - OPENAI_API_KEY=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
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  postgres-data:
